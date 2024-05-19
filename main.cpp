@@ -1,38 +1,42 @@
 #include "mbed.h"
-#include <cstdio>
+#include "LSM6DSLSensor.h"
+#include <cmath>
 
-int t1 = 0;
-int t2 = 1;
-int next_term = t1 + t2;
-int max_terms = 8;
+#define PI 3.141592654
 
-int fib(int n){
-    // n is the nth term result
-    if (n == 0 || n == 1)
-        return n;
-    else
-        return (fib(n-1)+fib(n-2));
+static DevI2C devI2c(PB_11,PB_10);
+static LSM6DSLSensor acc_gyro(&devI2c,0xD4,D4,D5); // high address
+
+
+float computeAngle(int x, int y, int z){
+    float res = 0;
+    res = atan( (float)x /sqrt( pow((float)y, 2) + pow((float)z, 2)));
+    res = (res * 180)/PI;
+    return res;
 }
 
-int main()
-{
-    printf("Hello, lab program 1 using simple for loop\r\n");
-    printf("Fibonacci Sequence: %d, %d, ", t1, t2);
-    for(int i = 3; i <= max_terms; i++){
-        printf("%d, ", next_term);
-        t1 = t2;
-        t2 = next_term;
-        next_term = t1 + t2;
-    }
-    printf("\r\n");
+/* Simple main function */
+int main() {
+    uint8_t id;
+    int32_t axes[3];
+    float res=0;
+    acc_gyro.init(NULL);
 
-    printf("Hello, lab program 1 using recursive \r\n");
-    //printf("Fibonacci Sequence: %d, %d, ", t1, t2);
-    for(int i = 0; i <= max_terms; i++){
-        printf("%d, ", fib(i));
+    acc_gyro.enable_x();
+    acc_gyro.enable_g();
 
-    }
-    printf("\r\n");
-    while (true) {
+    printf("This is an accelerometer example running on Mbed OS %d.%d.%d.\n", MBED_MAJOR_VERSION, MBED_MINOR_VERSION, MBED_PATCH_VERSION);
+    acc_gyro.read_id(&id);
+    printf("LSM6DSL accelerometer & gyroscope = 0x%X\r\n", id);
+
+    while(1) {
+
+        acc_gyro.get_x_axes(axes);
+        res = computeAngle(axes[0], axes[1], axes[2]);
+        printf("LSM6DSL: %6d, %6d, %6d, %3.2f\r\n", axes[0], axes[1], axes[2], res);
+
+
+        thread_sleep_for(2000);
+
     }
 }
