@@ -1,42 +1,58 @@
 #include "mbed.h"
-#include "LSM6DSLSensor.h"
-#include <cmath>
+// main() runs in its own thread in the OS
 
-#define PI 3.141592654
+class Shape{
+    public:
+        // Shape Square
+        Shape(int a){
+         _a = a;
+         _b = -1;
+        }
 
-static DevI2C devI2c(PB_11,PB_10);
-static LSM6DSLSensor acc_gyro(&devI2c,0xD4,D4,D5); // high address
+        // Shape Rectangle
+        Shape(int a, int b){
+            _a = a;
+            _b = b;
+            //return a * b;
+        }
 
+        int area(){
+            if(_b == -1)
+                return (_a * _a);
+            else
+                return (_a * _b);
+        }
 
-float computeAngle(int x, int y, int z){
-    float res = 0;
-    res = atan( (float)x /sqrt( pow((float)y, 2) + pow((float)z, 2)));
-    res = (res * 180)/PI;
-    return res;
-}
+        int parameter(){
+            if(_b == -1)
+                return (4 * _a);
+            else
+                return (2 * (_a + _b));
+        }
 
-/* Simple main function */
-int main() {
-    uint8_t id;
-    int32_t axes[3];
-    float res=0;
-    acc_gyro.init(NULL);
+        void shape_type(){
+            if(_b == -1)
+                printf(" Shape is a Square with side %d \r\n", _a);
+            else
+                printf(" Shape is a Rectangle with sides %d and %d \r\n", _a, _b);
+        }
 
-    acc_gyro.enable_x();
-    acc_gyro.enable_g();
+    private:
+        int _a, _b;
 
-    printf("This is an accelerometer example running on Mbed OS %d.%d.%d.\n", MBED_MAJOR_VERSION, MBED_MINOR_VERSION, MBED_PATCH_VERSION);
-    acc_gyro.read_id(&id);
-    printf("LSM6DSL accelerometer & gyroscope = 0x%X\r\n", id);
+};
 
-    while(1) {
+int main()
+{
+    Shape sqr(3);
+    Shape rect(3,7);
 
-        acc_gyro.get_x_axes(axes);
-        res = computeAngle(axes[0], axes[1], axes[2]);
-        printf("LSM6DSL: %6d, %6d, %6d, %3.2f\r\n", axes[0], axes[1], axes[2], res);
+    sqr.shape_type();
+    printf("area is %d, perimeter is %d \r\n", sqr.area(), sqr.parameter());
 
-
-        thread_sleep_for(2000);
+    rect.shape_type();
+    printf("area is %d, perimeter is %d \r\n", rect.area(), rect.parameter());
+    while (true) {
 
     }
 }
